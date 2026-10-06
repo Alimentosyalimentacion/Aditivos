@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aditivos en Alimentación Animal</title>
+    <style>
+        :root {
+            --primary: #003366;
+            --secondary: #0066cc;
+            --accent: #ffcc00;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --card-bg: #fff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-color); overflow-x: hidden; }
+
+        /* HEADER & PROGRESS */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .progress-container { flex-grow: 1; margin: 0 20px; background: rgba(255,255,255,0.2); border-radius: 10px; height: 10px; overflow: hidden; }
+        .progress-bar { height: 100%; background-color: var(--accent); width: 0%; transition: width 0.3s ease; }
+        .timer { font-weight: bold; font-family: monospace; font-size: 1.2em; }
+
+        /* SCREENS */
+        .screen { display: none; padding: 80px 20px 60px 20px; max-width: 1200px; margin: 0 auto; min-height: 100vh; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* TYPOGRAPHY & BUTTONS */
+        h1, h2, h3 { color: var(--primary); }
+        .btn {
+            background-color: var(--secondary); color: white; border: none; padding: 10px 20px;
+            border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: bold; transition: background 0.2s;
+            margin: 5px;
+        }
+        .btn:hover { background-color: var(--primary); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-warning { background-color: var(--warning); color: #333; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-success { background-color: var(--success); }
+        
+        /* NAVIGATION */
+        .nav-controls {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px 20px;
+            display: flex; justify-content: space-between; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 1000;
+        }
+
+        /* CARDS */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card {
+            background: var(--card-bg); border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--secondary); transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        .card-title { font-size: 1.2em; font-weight: bold; margin-bottom: 10px; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        .card-section { margin-bottom: 15px; }
+        .card-section strong { display: block; color: #555; margin-bottom: 5px; font-size: 0.9em; text-transform: uppercase; }
+        .hidden-content { display: none; margin-top: 10px; padding: 10px; background: #f9f9f9; border-left: 3px solid var(--accent); }
+
+        /* FORM */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; max-width: 400px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+
+        /* DRAG & DROP */
+        .dnd-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .dnd-zone { flex: 1; min-width: 250px; background: #e9ecef; border: 2px dashed #adb5bd; border-radius: 8px; padding: 15px; min-height: 200px; }
+        .dnd-item { background: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: grab; text-align: center; font-weight: bold; border-left: 4px solid var(--secondary); }
+        .dnd-item:active { cursor: grabbing; }
+
+        /* QUIZ */
+        .quiz-question { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .quiz-option { background: #f4f7f6; border: 1px solid #ddd; padding: 15px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .quiz-option:hover { background: #e2e6e9; }
+        .quiz-option.selected { background: var(--secondary); color: white; border-color: var(--primary); }
+        .feedback { margin-top: 15px; padding: 15px; border-radius: 5px; display: none; }
+        .feedback.correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .feedback.incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* AUDIO ACTIVITY */
+        .audio-activity { background: #eef2f5; padding: 20px; border-radius: 8px; border-left: 5px solid var(--primary); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div id="user-display">Aditivos en Alimentación Animal</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="timer" id="timer">00:00</div>
+    </header>
+
+    <main id="app">
+        <!-- PANTALLA 0: REGISTRO -->
+        <div id="screen-0" class="screen active">
+            <h1>Aditivos en Alimentación Animal</h1>
+            <h2>"Aprende a elegirlos, no solamente a memorizarlos."</h2>
+            <p>Tu objetivo no es memorizar una lista de aditivos.</p>
+            <p>Al finalizar deberás poder reconocer qué tipo de aditivo utilizarías ante diferentes situaciones de producción animal, comprender su función, mecanismo de acción y considerar aspectos como dosis, especie, alimento y restricciones[cite: 188].</p>
+            <p><strong>Duración aproximada:</strong> 20–30 minutos.</p>
+            
+            <div class="card" style="max-width: 500px; margin-top: 30px;">
+                <h3>Registro del Estudiante</h3>
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="reg-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Grupo</label>
+                    <input type="text" id="reg-group" required>
+                </div>
+                <div class="form-group">
+                    <label>Número de Cuenta</label>
+                    <input type="text" id="reg-id" required>
+                </div>
+                <button class="btn" onclick="startActivity()">COMENZAR ACTIVIDAD</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 1: MAPA GENERAL -->
+        <div id="screen-1" class="screen">
+            <h2>Mapa General de Aditivos</h2>
+            <p>Antes de entrar a las estaciones, analiza la ubicación de cada grupo[cite: 112].</p>
+            <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+                <h3>ADITIVOS</h3>
+                <p>↓</p>
+                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    <div class="card"><strong>Modificadores del Consumo</strong><br><small>Aglutinantes, Saborizantes</small></div>
+                    <div class="card"><strong>Conservadores</strong><br><small>Antimicóticos, Antioxidantes</small></div>
+                    <div class="card"><strong>Secuestrantes</strong></div>
+                    <div class="card"><strong>Pigmentantes</strong></div>
+                    <div class="card"><strong>Moduladores de la Digestión</strong><br><small>Ácidos, Buffers, Enzimas, Ionóforos...</small></div>
+                    <div class="card"><strong>Alteradores del Metabolismo</strong><br><small>Aminoácidos, Anabólicos, Beta-adrenérgicos</small></div>
+                </div>
+            </div>
+            
+            <h3 style="margin-top:40px;">Actividad: Reconstruye el Mapa</h3>
+            <p>Arrastra (o haz clic) en el tipo de aditivo y colócalo en su categoría principal correspondiente.</p>
+            
+            <div class="dnd-container">
+                <div style="width: 250px;" id="dnd-source" class="dnd-zone">
+                    <!-- Items genrados por JS -->
+                </div>
+                <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="dnd-zone" data-category="Modificadores del Consumo"><strong>Modificadores del Consumo</strong></div>
+                    <div class="dnd-zone" data-category="Conservadores"><strong>Conservadores</strong></div>
+                    <div class="dnd-zone" data-category="Moduladores de la Digestión"><strong>Moduladores de la Digestión</strong></div>
+                    <div class="dnd-zone" data-category="Alteradores del Metabolismo"><strong>Alteradores del Metabolismo</strong></div>
+                </div>
+            </div>
+            <p id="dnd-feedback" style="font-weight: bold; margin-top: 10px;"></p>
+        </div>
+
+        <!-- ESTACIONES (Generadas dinámicamente) -->
+        <div id="screen-2" class="screen"><div id="station-1-content"></div></div>
+        <div id="screen-3" class="screen"><div id="station-2-content"></div></div>
+        <div id="screen-4" class="screen"><div id="station-3-content"></div></div>
+        <div id="screen-5" class="screen"><div id="station-4-content"></div></div>
+        <div id="screen-6" class="screen"><div id="station-5-content"></div></div>
+
+        <!-- PANTALLA 7: RETO FINAL -->
+        <div id="screen-7" class="screen">
+            <h2>Reto Final</h2>
+            <p>Demuestra tu capacidad para tomar decisiones como profesional de producción animal.</p>
+            <div id="quiz-container"></div>
+            <button class="btn btn-success" id="btn-submit-quiz" onclick="submitQuiz()">FINALIZAR Y CALIFICAR</button>
+        </div>
+
+        <!-- PANTALLA 8: RESULTADOS -->
+        <div id="screen-8" class="screen">
+            <h2>Resultado Final</h2>
+            <div class="card" style="text-align: center;">
+                <h1 style="font-size: 3em; margin: 10px 0;" id="final-score">0.0 / 10</h1>
+                <p id="attempt-info"></p>
+            </div>
+            <div class="grid-container" id="dimensions-results">
+                <!-- Barras de desempeño por dimensión -->
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-warning" onclick="resetQuiz()">REPETIR RETO</button>
+                <button class="btn" onclick="goToScreen(1)">VOLVER AL MAPA</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="nav-controls" id="nav-controls" style="display: none;">
+        <button class="btn" id="btn-prev" onclick="navigate(-1)">← ANTERIOR</button>
+        <button class="btn" id="btn-next" onclick="navigate(1)">SIGUIENTE →</button>
+    </div>
+
+<script>
+// =====================================
+// INTEGRACIÓN GOOGLE APPS SCRIPT
+// =====================================
+const APPS_SCRIPT_URL = "PEGAR_AQUI_URL"; // Profesor: Pegue aquí su URL /exec obtenida al implementar el script en Google.
+
+// =====================================
+// BASE DE DATOS EDUCATIVA DE ADITIVOS
+// =====================================
+const aditivosDB = [
+    {
+        nombre: "Aglutinantes",
+        estacion: 1,
+        categoria: "Modificadores del Consumo",
+        objetivo: "Modificar la textura de la ración, mejorar almacenamiento y reducir polvosidad/desperdicio[cite: 193].",
+        mecanismo: "Aumentan la viscosidad de los líquidos y absorben agua (ej. Bentonitas)[cite: 196, 197], confiriendo adhesión a las partículas.",
+        ejemplos: "Agua, Melaza, Bentonita de Sodio/Calcio, Grasas y Aceites, Óxidos de Ca y Mg[cite: 194, 195, 196, 198, 199].",
+        especies: "Todas. Cerdos (agua directa)[cite: 194].",
+        situaciones: "Fabricación de alimentos peletizados o comprimidos (bloques nutricionales)[cite: 193, 195].",
+        dosis: "Melaza: 5-10% INC; Bentonitas: Máx 2% INC; Grasas: 3-5% INC; Óxidos: 0.3-1% INC[cite: 195, 196, 198, 199].",
+        precauciones: "El agua propicia proliferación de hongos. La melaza puede causar diarrea por exceso de Potasio. Las grasas producen pellets blandos y se enrancian fácilmente[cite: 194, 195, 198].",
+        claveProductiva: "Úsalos cuando necesites mejorar la forma física del alimento (pellets/bloques) o reducir el polvo."
+    },
+    {
+        nombre: "Saborizantes",
+        estacion: 1,
+        categoria: "Modificadores del Consumo",
+        objetivo: "Aumentar la palatabilidad, modificar o enmascarar sabores originales[cite: 200].",
+        mecanismo: "Estimulación de neuronas gustativas (ionotrópicas para sales/ácidos, metabotrópicas para dulce/amargo/aminoácidos)[cite: 207].",
+        ejemplos: "Naturales: Melaza, Sal. Sintéticos: Glutamato monosódico, Maltol, extractos (carne, pescado, vainilla)[cite: 202, 203, 204].",
+        especies: "Cerdos (lechones), bovinos lecheros, mascotas, aves[cite: 206].",
+        situaciones: "Dietas de iniciación/preiniciadores, o al usar ingredientes poco apetecibles como pollinaza (Pomel)[cite: 202, 206].",
+        dosis: "Sal: 0.1-0.5% (no rumiantes), 0.5-2.0% (rumiantes). Melaza: 5-15% INC[cite: 202, 203].",
+        precauciones: "Exceder el 7% de sal reduce drásticamente el consumo[cite: 203].",
+        claveProductiva: "Contexto clave: Dietas para animales jóvenes (destete) o enmascaramiento de subproductos de mal sabor."
+    },
+    {
+        nombre: "Antimicóticos / Inhibidores de Hongos",
+        estacion: 2,
+        categoria: "Conservación y Calidad",
+        objetivo: "Prolongar la vida media del alimento evitando la proliferación de hongos (Aspergillus, Penicillium, Fusarium) y levaduras[cite: 218, 219, 222].",
+        mecanismo: "Acción fungicida o micostática que altera el metabolismo celular del hongo[cite: 221, 226].",
+        ejemplos: "Ácidos orgánicos (Propiónico, Acético, Fórmico), Benzoato de Na, Sulfato de Cobre[cite: 226, 227].",
+        especies: "Todas.",
+        situaciones: "Almacenamiento de granos con alta humedad (>12%), silos mal diseñados, altas temperaturas[cite: 220].",
+        dosis: "Información no especificada en el material para principios activos genéricos.",
+        productos: "Mold-Zap, Enamold, Break Mold[cite: 229].",
+        precauciones: "Deben aplicarse preventivamente antes de que la toxina sea sintetizada por el hongo[cite: 218].",
+        claveProductiva: "Prevenir es la clave: si el hongo ya produjo la micotoxina, el antimicótico no la elimina."
+    },
+    {
+        nombre: "Antioxidantes",
+        estacion: 2,
+        categoria: "Conservación y Calidad",
+        objetivo: "Inhibir la oxidación (rancidez oxidativa) de los lípidos para prolongar la vida del alimento[cite: 211, 213].",
+        mecanismo: "Estructuras fenólicas insaturadas que donan H+ o electrones a los radicales libres, estabilizándolos y deteniendo la reacción en cadena[cite: 211, 215].",
+        ejemplos: "Sintéticos: Etoxiquina (ETQ), BHA, BHT, BHQ, Galacto de propilo. Naturales: Vitamina E[cite: 216].",
+        especies: "Todas.",
+        situaciones: "Dietas altas en grasas/aceites (marinos > vegetales > animales) o para proteger vitaminas liposolubles (A > D > E)[cite: 214].",
+        dosis: "ETQ: 100-150 g/ton; BHA: 250-300 g/ton; BHT: 120-200 g/ton; Vit E: 400 g/ton[cite: 216].",
+        productos: "IQ 20%, Dres-Quin 20[cite: 217].",
+        precauciones: "La rancidez destruye aminoácidos y genera compuestos tóxicos (peróxidos)[cite: 213].",
+        claveProductiva: "Indispensables siempre que incluyas aceites o grasas en la formulación."
+    },
+    {
+        nombre: "Secuestrantes de Micotoxinas",
+        estacion: 2,
+        categoria: "Conservación y Calidad",
+        objetivo: "Disminuir la cantidad de micotoxinas activas evitando que se absorban en el tracto gastrointestinal del animal[cite: 146].",
+        mecanismo: "Ligan químicamente a las micotoxinas en el TGI (modifican estructura/absorben), disminuyendo su absorción y biodisponibilidad[cite: 153].",
+        ejemplos: "Aluminosilicatos (hidratados de Ca/Na), Bentonitas, Dióxido de silicio, Paredes de levaduras[cite: 152].",
+        especies: "Cerdos (muy susceptibles a Zearalenona/Vomitoxina), aves, rumiantes[cite: 148, 151].",
+        situaciones: "Suministro de alimento previamente contaminado o granos mal almacenados[cite: 154].",
+        dosis: "Granos: 2 kg/ton. Alimento balanceado: 2-5 kg/ton[cite: 155].",
+        productos: "Toxy-Nil, Mycofix, Unike Plus[cite: 156, 157].",
+        precauciones: "Aflatoxinas son hepatotóxicas; Zearalenona es estrogénica (vulvovaginitis); Vomitoxina causa emesis[cite: 151, 224].",
+        claveProductiva: "El secuestrante actúa como 'esponja' intestinal frente a toxinas ya formadas en el alimento."
+    },
+    {
+        nombre: "Pigmentantes Carotenoides",
+        estacion: 3,
+        categoria: "Pigmentación",
+        objetivo: "Mejorar el aspecto visual del producto final (yema del huevo, piel del pollo, tarsos) según demanda del consumidor[cite: 165, 167].",
+        mecanismo: "Proceso acumulativo post-absorción intestinal con afinidad específica tisular (Tejido adiposo > Epidermis > Tarsos)[cite: 168, 177].",
+        ejemplos: "Xantofilas naturales (Luteína, Zeaxantina, Capsantina): Maíz, Alfalfa, Flor de cempasúchil, Chiles. Sintéticos: Cantaxantina, Apoéster[cite: 169, 170, 174, 175].",
+        especies: "Aves (pollo de engorda, gallina de postura), Peces[cite: 177].",
+        situaciones: "Para alcanzar grados específicos en el abanico colorimétrico (amarillo a naranja/rojo)[cite: 176].",
+        dosis: "Pollos 4-8 sem: 40-60 g/ton amarillas + 2-3 g/ton rojas. Gallinas: 5-6 g/ton amarillas + 2-4 g/ton rojas[cite: 178].",
+        productos: "Carophyll, Xantofil, Capsantal[cite: 180, 181].",
+        precauciones: "Los lipocromos (Sudanes, Anilinas) están PROHIBIDOS por ser cancerígenos. La alfalfa (máx 10%) y gluten (máx 10%) tienen limitantes antinutricionales[cite: 166, 173, 174].",
+        claveProductiva: "La mejor pigmentación se logra combinando xantofilas amarillas y rojas."
+    },
+    {
+        nombre: "Acidificantes",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Disminuir el pH intestinal para controlar el desarrollo de patógenos y mejorar absorción de nutrientes[cite: 6].",
+        mecanismo: "Efecto antimicrobiano por destrucción de membrana, inhibición metabólica y acumulación de aniones tóxicos en la bacteria[cite: 6].",
+        ejemplos: "Ácido cítrico, fórmico, fumárico, láctico, fosfórico, acético[cite: 10].",
+        especies: "Aves, cerdos (especialmente destete)[cite: 14].",
+        situaciones: "Estrés post-destete, cambios de dieta donde el animal hiperventila (alcalosis), dietas altas en proteína pre-starter[cite: 7, 9].",
+        dosis: "3 - 15 kg/ton[cite: 10].",
+        productos: "Biotronic, Citrozim, Acid-Farm[cite: 9, 10, 11].",
+        precauciones: "No dejan residuos ni requieren tiempo de retiro, actúan contra E. coli y Salmonella[cite: 14].",
+        claveProductiva: "Fundamentales en dietas de destete temprano para compensar la falta de ácido clorhídrico endógeno."
+    },
+    {
+        nombre: "Alcalinizantes / Amortiguadores (Buffers)",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Aumentar el pH ruminal, evitar acidosis láctica y controlar timpanismo[cite: 16, 17].",
+        mecanismo: "Neutralizan el pH ácido provocado por la sobreproducción de ácido láctico (Streptococcus bovis)[cite: 19, 20].",
+        ejemplos: "Bicarbonato de sodio, Óxido de magnesio, Bentonita de sodio, Carbonatos (Ca, K)[cite: 18].",
+        especies: "Rumiantes[cite: 21].",
+        situaciones: "Cambio brusco a dietas con altos carbohidratos fermentables (granos, tubérculos)[cite: 20, 21].",
+        dosis: "0.6 - 2% INC en la dieta[cite: 18].",
+        productos: "Total Tract Buffer, Buffer Plus[cite: 22].",
+        precauciones: "Ayudan a mantener el porcentaje de grasa en leche[cite: 17].",
+        claveProductiva: "El extintor de incendios ruminal cuando se incrementa bruscamente el grano."
+    },
+    {
+        nombre: "Ionóforos",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Modificar la microflora ruminal suprimiendo bacterias Gram+ (acetato/butirato) y favoreciendo Gram- (propionato)[cite: 36].",
+        mecanismo: "Traslocan cationes (Na+, K+) a través de la pared celular bacteriana, alterando la bomba Na-K. Inhiben metanogénesis[cite: 35, 40].",
+        ejemplos: "Monensina, Lasalocida, Salinomicina[cite: 38].",
+        especies: "Bovinos carne (principalmente). Aves y cerdos (como coccidiostatos)[cite: 43].",
+        situaciones: "Dietas de corral y pastoreo para mejorar conversión y digestibilidad aparente del nitrógeno[cite: 41, 44].",
+        dosis: "Monensina: 1200 g/ton (corral), 400 g/ton (pastoreo). Salinomicina: 30 g/ton[cite: 44].",
+        productos: "Rumensin, Salocin, Bovatec[cite: 37, 38].",
+        precauciones: "TÓXICOS EN EQUINOS. Efecto antagónico con bicarbonato de sodio[cite: 43].",
+        claveProductiva: "Desvían la fermentación hacia la producción de energía útil (propionato) en lugar de gas (metano)."
+    },
+    {
+        nombre: "Cultivos Microbianos (Probióticos)",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Favorecer el equilibrio de la microbiota del TGI aumentando microorganismos deseables[cite: 47].",
+        mecanismo: "Exclusión competitiva, producción de ácido láctico/acidofilinas (bajan pH), des-conjugan ácidos biliares, modulan inmunidad[cite: 48, 51].",
+        ejemplos: "Bacterias (Lactobacillus, Bacillus, Bifidobacterium), Levaduras (Saccharomyces cerevisiae)[cite: 49].",
+        especies: "Animales jóvenes (aves, cerdos, becerros), Vacas lecheras (levaduras)[cite: 52, 56].",
+        situaciones: "Preventivo de problemas gastrointestinales; las levaduras mejoran digestión de fibra en rumiantes[cite: 52, 55].",
+        dosis: "Levaduras: 1-2 kg/ton. Bacterias: variable según UFC[cite: 54, 57].",
+        productos: "NutriBAC, PoultryStar, Levucell[cite: 50, 53, 58].",
+        precauciones: "Las bacterias vivas son sensibles a temperatura (toleran hasta 46°C); cuidado al peletizar el alimento[cite: 52].",
+        claveProductiva: "Sembrar 'bacterias buenas' para que no quede espacio ni alimento para las patógenas."
+    },
+    {
+        nombre: "Prebióticos",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Servir de sustrato selectivo para la flora bacteriana beneficiosa en el colon[cite: 65, 66].",
+        mecanismo: "Los Mananooligosacáridos (MOS) actúan como trampa uniéndose a las lectinas de enterobacterias, impidiendo su adhesión epitelial[cite: 67].",
+        ejemplos: "Inulina, Fructooligosacáridos (FOS), Mananooligosacáridos (MOS), Lactulosa[cite: 66].",
+        especies: "Todas.",
+        situaciones: "Desafíos patógenos entéricos, necesidad de estabilizar flora intestinal[cite: 66].",
+        dosis: "0.5 a 5 kg/ton (según producto, ej. paredes de levadura)[cite: 68].",
+        productos: "Bio Mos, Amaferm, Immunowall[cite: 68, 69].",
+        precauciones: "Información no especificada en el material sobre toxicidad.",
+        claveProductiva: "Aportar el 'alimento específico' para que tus probióticos (flora nativa buena) colonicen eficazmente."
+    },
+    {
+        nombre: "Enzimas",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Mejorar la digestibilidad rompiendo sustratos específicos que el animal no puede digerir bien por sí solo[cite: 74].",
+        mecanismo: "Catálisis metabólica. Ej: Xilanasas/B-glucanasas reducen la viscosidad de la digesta; Fitasas liberan el fósforo fítico[cite: 72, 73, 82].",
+        ejemplos: "Fitasas, Proteasas, Amilasas, Xilanasas, B-glucanasas, Celulasas[cite: 74].",
+        especies: "Monogástricos (fitasas y no fibrosos); Rumiantes/Equinos (fibrosos)[cite: 78].",
+        situaciones: "Dietas altas en trigo/cebada (arabinoxilanos/glucanos) o soya/maíz para reducir excreción ambiental de P[cite: 72, 77, 79].",
+        dosis: "50 - 500 g/ton dependiendo la concentración[cite: 82].",
+        productos: "Econase, Quantum Blue, Rovabio, Optiphos[cite: 82, 88].",
+        precauciones: "Revisar la termoestabilidad de la enzima frente a la temperatura de peletizado[cite: 86].",
+        claveProductiva: "Desbloquean nutrientes atrapados, mejorando el valor nutritivo de ingredientes baratos."
+    },
+    {
+        nombre: "Fitoquímicos (Aditivos Botánicos)",
+        estacion: 4,
+        categoria: "Modulación de la Digestión",
+        objetivo: "Agentes antimicrobianos, inmunomoduladores y antioxidantes naturales (Sustitución de Antibióticos Promotores)[cite: 90].",
+        mecanismo: "Compuestos biológicamente activos (terpenoides, alcaloides, compuestos fenólicos) que actúan en la integridad intestinal[cite: 90, 91].",
+        ejemplos: "Orégano (Carvacrol), Ajo (Alicina), Tomillo (Timol), Canela (Cinamaldehído), Romero[cite: 94].",
+        especies: "Aves, cerdos.",
+        situaciones: "Estrategias de producción libre de antibióticos y mejora de salud intestinal[cite: 91, 100].",
+        dosis: "Información no especificada en el material (depende del extracto comercial).",
+        productos: "Biobron, Naturcox, Mentofin[cite: 100].",
+        precauciones: "Información no especificada en el material.",
+        claveProductiva: "La alternativa natural moderna frente a la prohibición global de antibióticos promotores."
+    },
+    {
+        nombre: "Aminoácidos Sintéticos",
+        estacion: 5,
+        categoria: "Metabolismo y Salud",
+        objetivo: "Mejorar el perfil de aminoácidos de la ración basándose en el concepto de Proteína Ideal[cite: 114, 117].",
+        mecanismo: "Cubren el requerimiento del aminoácido limitante. Ej: Metionina estimula secreción de VLDL en hígado para prevenir cetosis[cite: 118].",
+        ejemplos: "Lisina HCl, DL Metionina, L Treonina, L Triptófano, Metionina protegida ruminal[cite: 115].",
+        especies: "Aves, cerdos, vacas lecheras, mascotas, acuicultura[cite: 115].",
+        situaciones: "Formulación de precisión, prevención de hígado graso en periparto de vacas lecheras[cite: 114, 118].",
+        dosis: "Según formulación. Mepron (vacas): 10-20 g/cabeza/día[cite: 116].",
+        productos: "Mepron, Alimet, Biolys 60, ThreAmino[cite: 116, 119, 122].",
+        precauciones: "Se debe conocer el perfil exacto de los ingredientes base y el costo para justificar su inclusión[cite: 114].",
+        claveProductiva: "Evita el desperdicio de proteína entera; complementa solo lo que le falta a la dieta."
+    },
+    {
+        nombre: "Anabólicos y Hormonas",
+        estacion: 5,
+        categoria: "Metabolismo y Salud",
+        objetivo: "Mejorar la eficiencia en el crecimiento y la composición de la canal en finalización[cite: 124].",
+        mecanismo: "Receptores intracelulares estimulan transcripción de genes -> Aumento de retención de nitrógeno y síntesis proteica[cite: 127].",
+        ejemplos: "Androgénicos, Estrogénicos, Progestágenos (Melengestrol - MGA), Hormona del Crecimiento (GH)[cite: 126, 132].",
+        especies: "Novillos de engorda, corderos[cite: 125].",
+        situaciones: "Fase final (implantes aplicados 90-135 días antes del sacrificio)[cite: 130].",
+        dosis: "MGA (único en alimento): 0.25-0.50 mg/animal/día. Implantes vía SC[cite: 130].",
+        productos: "Implemax, Revalor, Synovex[cite: 129, 131].",
+        precauciones: "ESTÁN PROHIBIDOS EN LA UNIÓN EUROPEA. MGA requiere retiro de 48 hrs[cite: 130, 132].",
+        claveProductiva: "Alteración directa del sistema endócrino para priorizar músculo sobre grasa."
+    },
+    {
+        nombre: "Beta-adrenérgicos (Agonistas Beta)",
+        estacion: 5,
+        categoria: "Metabolismo y Salud",
+        objetivo: "Mejorar la eficiencia, disminuir grasa corporal y aumentar masa muscular (repartición de energía)[cite: 133, 137].",
+        mecanismo: "Actúan sobre receptores B1/B2. En adipocito activan ATP -> AMPc -> Activan lipasas (lipólisis). En músculo retienen Nitrógeno[cite: 135, 136].",
+        ejemplos: "Clembuterol, Zilpaterol, Ractopamina[cite: 134].",
+        especies: "Bovinos, cerdos[cite: 134].",
+        situaciones: "Etapa de finalización en corral para maximizar el rendimiento de la canal[cite: 140].",
+        dosis: "Zilpaterol: 0.15 mg/kg peso (6 ppm). Ractopamina: 5-10 ppm[cite: 140].",
+        productos: "Zilmax, Optaflexx[cite: 140].",
+        precauciones: "EL CLEMBUTEROL ESTÁ PROHIBIDO (intoxicación humana causa taquicardia, temblores, muerte). Uso estricto de dosis legales[cite: 139, 140].",
+        claveProductiva: "Redirigen la energía del alimento en la etapa final de grasa hacia músculo."
+    }
+];
+
+// =====================================
+// BANCO DE ACTIVIDADES Y PREGUNTAS
+// =====================================
+const quizDB = [
+    {
+        tipo: "seguridad",
+        pregunta: "En tu establo hay bovinos y también caballos. Has decidido utilizar un Ionóforo (como Monensina) en la dieta de los novillos. ¿Qué precaución crítica debes tener con los caballos?",
+        opciones: [
+            "Asegurarte de que consuman la mitad de la dosis bovina.",
+            "Evitar estrictamente que lo consuman, ya que es altamente tóxico para equinos.",
+            "Mezclarlo con bicarbonato de sodio para evitar acidosis en el caballo.",
+            "Ninguna, es un aditivo seguro para todas las especies de granja."
+        ],
+        respuesta: 1,
+        retro: "Los ionóforos son tóxicos y letales para los equinos[cite: 43].",
+        pista: "Recuerda las restricciones de seguridad anatómicas/fisiológicas de los monogástricos fermentadores traseros."
+    },
+    {
+        tipo: "situacion",
+        pregunta: "Ante un cambio brusco en la dieta con alta inclusión de granos en bovinos, la flora ruminal se altera, aumentando el ácido láctico y bajando el pH a 4.5. ¿Qué aditivo utilizarías en el alimento para revertir esto?",
+        opciones: [
+            "Acidificantes (como el ácido cítrico).",
+            "Antimicrobianos (como las sulfonamidas).",
+            "Alcalinizantes o Amortiguadores (como Bicarbonato de Sodio).",
+            "Beta-adrenérgicos (como el Zilpaterol)."
+        ],
+        respuesta: 2,
+        retro: "Los alcalinizantes/buffers aumentan el pH ruminal, previniendo la acidosis láctica generada por carbohidratos altamente fermentables[cite: 16, 20].",
+        pista: "Necesitas neutralizar un ácido. ¿Qué tipo de compuesto químico logra esto?"
+    },
+    {
+        tipo: "clasificacion",
+        pregunta: "Los Fructooligosacáridos (FOS) y la Inulina son carbohidratos no digeribles que benefician al huésped estimulando el crecimiento de flora bacteriana deseable. ¿A qué categoría pertenecen?",
+        opciones: [
+            "Probióticos",
+            "Enzimas",
+            "Prebióticos",
+            "Fitoquímicos"
+        ],
+        respuesta: 2,
+        retro: "Son Prebióticos. Sirven como 'alimento' o sustrato específico para la microbiota benéfica[cite: 65, 66].",
+        pista: "No son organismos vivos (no son 'pro'), son el alimento antes del organismo."
+    },
+    {
+        tipo: "mecanismo",
+        pregunta: "¿Cuál es el mecanismo de acción mediante el cual los antioxidantes (como Etoxiquina o Vitamina E) protegen los lípidos del alimento?",
+        opciones: [
+            "Disminuyen el pH para evitar que las bacterias hidrolicen la grasa.",
+            "Ceden un electrón a los radicales libres, estabilizándolos y deteniendo la reacción en cadena.",
+            "Ligan químicamente a los peróxidos y los excretan en las heces.",
+            "Bloquean los receptores celulares de oxidación en el intestino del animal."
+        ],
+        respuesta: 1,
+        retro: "Ceden electrones a los radicales libres, oxidándose ellos mismos y protegiendo así los dobles enlaces de los ácidos grasos[cite: 211, 215].",
+        pista: "Piensa en el nivel molecular y la inestabilidad de los radicales libres que buscan robar algo."
+    },
+    {
+        tipo: "aplicacion",
+        pregunta: "Deseas mejorar la coloración de la yema del huevo en tu granja de postura utilizando un producto natural rico en Xantofilas. ¿Qué ingrediente seleccionas?",
+        opciones: [
+            "Sudanes y Anilinas",
+            "Flor de Cempasúchil",
+            "Melaza",
+            "Bentonita de Calcio"
+        ],
+        respuesta: 1,
+        retro: "La flor de cempasúchil es rica en xantofilas naturales (luteína/zeaxantina) ideales para la yema[cite: 174, 179].",
+        pista: "Busca un ingrediente vegetal conocido tradicionalmente por sus fuertes pigmentos naranjas."
+    },
+    {
+        tipo: "seguridad",
+        pregunta: "¿Qué grupo de aditivos está estrictamente PROHIBIDO en la pigmentación animal debido a sus efectos cancerígenos demostrados?",
+        opciones: [
+            "Carotenoides (Xantofilas)",
+            "Lipocromos (Sudanes y Anilinas)",
+            "Apoésteres sintéticos",
+            "Luteína cristalizada"
+        ],
+        respuesta: 1,
+        retro: "Los Sudanes y Anilinas (Lipocromos) no deben utilizarse por su alta carcinogenicidad[cite: 166].",
+        pista: "Revisa la categoría de pigmentos sintéticos industriales que no provienen de carotenos."
+    },
+    {
+        tipo: "mismo_producto",
+        pregunta: "La Bentonita Sódica es un aditivo versátil. Si la usas para aumentar la viscosidad en la fabricación de pellets, actúa como Aglutinante. Pero si la usas en un alimento con alta humedad y riesgo de Fusarium, ¿qué función cumple?",
+        opciones: [
+            "Acidificante",
+            "Antioxidante",
+            "Secuestrante de micotoxinas",
+            "Antimicótico"
+        ],
+        respuesta: 2,
+        retro: "En presencia de micotoxinas, las bentonitas actúan como secuestrantes uniéndose a la toxina en el TGI[cite: 153].",
+        pista: "Las bentonitas son arcillas que pueden 'atrapar' compuestos químicos en su estructura."
+    },
+    {
+        tipo: "mecanismo",
+        pregunta: "¿Qué aditivos translocan cationes a través de la membrana celular de las bacterias, suprimiendo las Gram positivas productoras de acetato y favoreciendo a las productoras de propionato?",
+        opciones: [
+            "Prebióticos",
+            "Ionóforos",
+            "Alcalinizantes",
+            "Probióticos"
+        ],
+        respuesta: 1,
+        retro: "Los Ionóforos (ej. Monensina) actúan como transportadores iónicos, alterando el equilibrio osmótico de bacterias Gram+[cite: 35, 40].",
+        pista: "Su nombre deriva de su capacidad para transportar 'iones'."
+    },
+    {
+        tipo: "dosis",
+        pregunta: "Al formular con Cloruro de Sodio (Sal) como saborizante para bovinos, ¿qué ocurre si la inclusión excede el 7% en la dieta?",
+        opciones: [
+            "Mejora exponencialmente la ganancia diaria de peso.",
+            "Reduce el consumo voluntario del alimento.",
+            "Causa alcalosis metabólica severa.",
+            "Aumenta la absorción de micotoxinas."
+        ],
+        respuesta: 1,
+        retro: "Cantidades de sal mayores al 7% generan aversión y reducen el consumo[cite: 203].",
+        pista: "Piensa en el efecto fisiológico natural de un exceso extremo de sal en cualquier dieta."
+    },
+    {
+        tipo: "situacion",
+        pregunta: "En la fase final de engorda de novillos, se busca redirigir la energía de la dieta (lipólisis en tejido adiposo) hacia la retención de nitrógeno en el músculo. Sabiendo que el Clembuterol está prohibido, ¿qué aditivo legal de esta familia utilizarías?",
+        opciones: [
+            "Óxido de Magnesio",
+            "Zilpaterol o Ractopamina",
+            "Bambermicina",
+            "Ácido propiónico"
+        ],
+        respuesta: 1,
+        retro: "Zilpaterol y Ractopamina son beta-adrenérgicos permitidos que mejoran la composición de la canal sin los riesgos del Clembuterol[cite: 140].",
+        pista: "Busca los nombres comerciales o principios activos aprobados de los agonistas beta."
+    }
+];
+
+// =====================================
+// LÓGICA DE LA APLICACIÓN
+// =====================================
+let userData = {
+    nombre: "",
+    grupo: "",
+    id: "",
+    startTime: null,
+    endTime: null,
+    totalTime: "",
+    progress: 0,
+    stationsCompleted: [false, false, false, false, false],
+    attempts: 0,
+    bestScore: 0,
+    hintsUsed: 0
+};
+let currentScreen = 0;
+let timerInterval;
+const totalScreens = 8;
+
+// Navegación Básica
+function goToScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(`screen-${screenId}`).classList.add('active');
+    currentScreen = screenId;
+    
+    // Controles de navegación inferiores
+    const navControls = document.getElementById('nav-controls');
+    if(screenId > 0 && screenId < 7) {
+        navControls.style.display = 'flex';
+    } else {
+        navControls.style.display = 'none';
+    }
+    
+    // Marcar progreso de estaciones
+    if(screenId >= 2 && screenId <= 6) {
+        userData.stationsCompleted[screenId - 2] = true;
+        if(!document.getElementById(`station-${screenId-1}-content`).innerHTML) {
+            renderStation(screenId - 1);
+        }
+    }
+    updateProgress();
+}
+
+function navigate(dir) {
+    let next = currentScreen + dir;
+    if(next > 0 && next <= 7) goToScreen(next);
+}
+
+// Iniciar Actividad
+function startActivity() {
+    const name = document.getElementById('reg-name').value.trim();
+    const group = document.getElementById('reg-group').value.trim();
+    const sid = document.getElementById('reg-id').value.trim();
+
+    if(!name || !group || !sid) {
+        alert("Por favor, completa todos los campos.");
+        return;
+    }
+
+    userData.nombre = name;
+    userData.grupo = group;
+    userData.id = sid;
+    userData.startTime = new Date();
+    
+    document.getElementById('user-display').innerText = `Estudiante: ${name}`;
+    
+    timerInterval = setInterval(updateTimer, 1000);
+    initDragAndDrop();
+    goToScreen(1);
+}
+
+function updateTimer() {
+    if(!userData.startTime) return;
+    let now = new Date();
+    let diff = Math.floor((now - userData.startTime) / 1000);
+    let m = Math.floor(diff / 60).toString().padStart(2, '0');
+    let s = (diff % 60).toString().padStart(2, '0');
+    document.getElementById('timer').innerText = `⏱ ${m}:${s}`;
+}
+
+function updateProgress() {
+    let completed = userData.stationsCompleted.filter(Boolean).length;
+    let percentage = 10 + (completed * 15); // Mapa(10%) + 5 est(75%) + Reto(15%)
+    if(currentScreen === 8) percentage = 100;
+    document.getElementById('progress-bar').style.width = `${percentage}%`;
+}
+
+// DRAG AND DROP Lógica
+let dndItems = [
+    {id: 'd1', cat: 'Modificadores del Consumo', label: 'Saborizantes'},
+    {id: 'd2', cat: 'Conservadores', label: 'Antimicóticos'},
+    {id: 'd3', cat: 'Moduladores de la Digestión', label: 'Ionóforos'},
+    {id: 'd4', cat: 'Alteradores del Metabolismo', label: 'Anabólicos'},
+    {id: 'd5', cat: 'Moduladores de la Digestión', label: 'Enzimas'}
+];
+
+function initDragAndDrop() {
+    const source = document.getElementById('dnd-source');
+    source.innerHTML = '';
+    // Shuffle
+    dndItems.sort(() => Math.random() - 0.5).forEach(item => {
+        let div = document.createElement('div');
+        div.className = 'dnd-item';
+        div.draggable = true;
+        div.id = item.id;
+        div.innerText = item.label;
+        div.dataset.category = item.cat;
+        
+        div.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', e.target.id);
+        });
+        
+        // Mobile fallback (click to select)
+        div.addEventListener('click', (e) => {
+            document.querySelectorAll('.dnd-item').forEach(el => el.style.border = 'none');
+            div.style.border = '2px solid red';
+            window.selectedDndItem = div;
+        });
+        
+        source.appendChild(div);
+    });
+
+    document.querySelectorAll('.dnd-zone').forEach(zone => {
+        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            handleDrop(document.getElementById(id), zone);
+        });
+        
+        // Mobile fallback
+        zone.addEventListener('click', (e) => {
+            if(window.selectedDndItem) {
+                handleDrop(window.selectedDndItem, zone);
+                window.selectedDndItem.style.border = 'none';
+                window.selectedDndItem = null;
+            }
+        });
+    });
+}
+
+function handleDrop(item, zone) {
+    const fb = document.getElementById('dnd-feedback');
+    if(!zone.dataset.category) return; // if dropped back to source
+
+    if(item.dataset.category === zone.dataset.category) {
+        zone.appendChild(item);
+        item.draggable = false;
+        fb.style.color = "green";
+        fb.innerText = "¡Correcto!";
+        checkDndComplete();
+    } else {
+        fb.style.color = "red";
+        fb.innerText = "Revisa nuevamente. Pista: " + getDndHint(item.dataset.category);
+    }
+}
+
+function getDndHint(cat) {
+    if(cat === 'Modificadores del Consumo') return "Afecta la textura o palatabilidad antes de la ingestión.";
+    if(cat === 'Conservadores') return "Mantiene el alimento en buen estado en el silo.";
+    if(cat === 'Moduladores de la Digestión') return "Actúa en el intestino o rumen mejorando el aprovechamiento.";
+    return "Altera procesos de crecimiento o retención de músculo.";
+}
+
+function checkDndComplete() {
+    if(document.getElementById('dnd-source').children.length === 0) {
+        document.getElementById('dnd-feedback').innerHTML = "<span style='color:var(--primary); font-size:1.2em;'>¡Excelente! Ya tienes el mapa general de los aditivos. Usa los botones de abajo para avanzar.</span>";
+    }
+}
+
+// RENDER STATIONS
+const stationTitles = [
+    "Estación 1: Modificadores del Consumo",
+    "Estación 2: Conservación y Calidad del Alimento",
+    "Estación 3: Pigmentación",
+    "Estación 4: Modulación de la Digestión",
+    "Estación 5: Metabolismo y Producción"
+];
+
+function renderStation(stationIndex) {
+    let s = stationIndex; // 1 to 5
+    let container = document.getElementById(`station-${s}-content`);
+    let html = `<h2>${stationTitles[s-1]}</h2><div class="grid-container">`;
+    
+    let items = aditivosDB.filter(a => a.estacion === s);
+    
+    items.forEach((item, idx) => {
+        let uId = `st${s}-item${idx}`;
+        html += `
+        <div class="card">
+            <div class="card-title">${item.nombre}</div>
+            <div class="card-section"><strong>🎯 ¿PARA QUÉ SE UTILIZAN?</strong>${item.objetivo}</div>
+            <div class="card-section"><strong>🐄 ¿DÓNDE PODRÍA UTILIZARLO?</strong>${item.especies} <br> <i>${item.situaciones}</i></div>
+            
+            <button class="btn btn-warning" style="padding: 5px 10px; font-size: 0.9em;" onclick="toggleDetails('${uId}')">Ver mecanismo y dosis ↓</button>
+            
+            <div id="${uId}" class="hidden-content">
+                <div class="card-section"><strong>⚙️ MECANISMO DE ACCIÓN</strong>${item.mecanismo}</div>
+                <div class="card-section"><strong>🥣 DOSIS / INCLUSIÓN</strong>${item.dosis}</div>
+                <div class="card-section"><strong>🧪 EJEMPLOS / PRODUCTOS</strong>${item.ejemplos} <br> ${item.productos || ''}</div>
+                <div class="card-section" style="color:var(--danger)"><strong>⚠️ PRECAUCIONES</strong>${item.precauciones}</div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #eef2f5; border-radius: 4px;">
+                <strong>💡 CLAVE PRODUCTIVA:</strong> ${item.claveProductiva}
+            </div>
+        </div>
+        `;
+    });
+    
+    html += `</div>`;
+    
+    // Add special interactive task based on station
+    if(s === 4) html += generateAudioActivity();
+    
+    container.innerHTML = html;
+}
+
+function toggleDetails(id) {
+    let el = document.getElementById(id);
+    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+
+function generateAudioActivity() {
+    return `
+    <div class="audio-activity" style="margin-top: 30px;">
+        <h3>🎧 APRENDIZAJE ACTIVO: ESCUCHA LA SITUACIÓN</h3>
+        <p>Presiona el botón, escucha el caso clínico-productivo y toma una decisión.</p>
+        <button class="btn" onclick="playAudioCase()">▶ ESCUCHAR CASO</button>
+        <div id="audio-q" style="display:none; margin-top: 15px;">
+            <p><strong>¿Qué tipo de aditivo considerarías?</strong></p>
+            <button class="btn" onclick="checkAudio(false)">Antibiótico Promotor</button>
+            <button class="btn" onclick="checkAudio(true)">Acidificante</button>
+            <button class="btn" onclick="checkAudio(false)">Secuestrante</button>
+            <p id="audio-fb" class="feedback"></p>
+        </div>
+    </div>
+    `;
+}
+
+function playAudioCase() {
+    const text = "En una granja porcina, los lechones recién destetados están presentando un cuadro de hiperventilación por estrés, lo cual está causando una alcalosis leve. Sabes que esto afecta la digestión y favorece a E. Coli. Además, la dieta pre-starter tiene un 22% de proteína, la cual necesita un pH bajo para digerirse.";
+    if ('speechSynthesis' in window) {
+        let msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'es-MX';
+        window.speechSynthesis.speak(msg);
+    } else {
+        alert("Audio no soportado. Transcripción: " + text);
+    }
+    document.getElementById('audio-q').style.display = 'block';
+}
+
+function checkAudio(isCorrect) {
+    const fb = document.getElementById('audio-fb');
+    fb.style.display = 'block';
+    if(isCorrect) {
+        fb.className = 'feedback correct';
+        fb.innerHTML = "<strong>✓ CORRECTO:</strong> En el destete, la falta de ácido clorhídrico endógeno más el estrés requieren un Acidificante para bajar el pH, controlar bacterias y digerir la proteína vegetal[cite: 7]. <br><br>📖 <i>Transcripción: En una granja porcina, los lechones recién destetados... (estrés, alcalosis, 22% proteína).</i>";
+    } else {
+        fb.className = 'feedback incorrect';
+        fb.innerHTML = "<strong>✗ REVISA TU DECISIÓN:</strong> Ese aditivo tiene otra función. El problema principal aquí es el pH alto en el estómago de un animal joven. Intenta de nuevo.";
+    }
+}
+
+// QUIZ SYSTEM
+let userAnswers = [];
+
+function renderQuiz() {
+    let container = document.getElementById('quiz-container');
+    container.innerHTML = '';
+    userAnswers = new Array(quizDB.length).fill(null);
+    
+    quizDB.forEach((q, i) => {
+        let html = `
+        <div class="quiz-question" id="q-${i}">
+            <p><strong>${i+1}.</strong> ${q.pregunta}</p>
+            <div class="quiz-options">
+        `;
+        q.opciones.forEach((opt, optIndex) => {
+            html += `<div class="quiz-option" id="opt-${i}-${optIndex}" onclick="selectOption(${i}, ${optIndex})">${opt}</div>`;
+        });
+        html += `
+            </div>
+            <button class="btn btn-warning" style="margin-top:10px; font-size:0.8em;" onclick="showHint(${i})">💡 PISTA</button>
+            <div id="hint-${i}" class="hidden-content">${q.pista}</div>
+        </div>`;
+        container.innerHTML += html;
+    });
+}
+
+function selectOption(qIndex, optIndex) {
+    userAnswers[qIndex] = optIndex;
+    let opts = document.getElementById(`q-${qIndex}`).querySelectorAll('.quiz-option');
+    opts.forEach(o => o.classList.remove('selected'));
+    document.getElementById(`opt-${qIndex}-${optIndex}`).classList.add('selected');
+}
+
+function showHint(index) {
+    toggleDetails(`hint-${index}`);
+    userData.hintsUsed++;
+}
+
+function submitQuiz() {
+    if(userAnswers.includes(null)) {
+        alert("Por favor responde todas las preguntas del reto.");
+        return;
+    }
+    
+    userData.attempts++;
+    let correctCount = 0;
+    let dimensions = { 'seguridad': {c:0, t:0}, 'situacion': {c:0, t:0}, 'clasificacion': {c:0, t:0}, 'mecanismo': {c:0, t:0}, 'aplicacion': {c:0, t:0}, 'dosis': {c:0, t:0}, 'mismo_producto': {c:0, t:0} };
+    
+    quizDB.forEach((q, i) => {
+        dimensions[q.tipo].t++;
+        let qDiv = document.getElementById(`q-${i}`);
+        let opts = qDiv.querySelectorAll('.quiz-option');
+        
+        opts.forEach(o => o.style.border = 'none');
+        
+        if(userAnswers[i] === q.respuesta) {
+            correctCount++;
+            dimensions[q.tipo].c++;
+            opts[userAnswers[i]].style.background = '#d4edda';
+            opts[userAnswers[i]].style.borderColor = '#c3e6cb';
+        } else {
+            opts[userAnswers[i]].style.background = '#f8d7da';
+            opts[userAnswers[i]].style.borderColor = '#f5c6cb';
+            opts[q.respuesta].style.border = '2px solid #28a745';
+        }
+        
+        // Show retro
+        let existingRetro = document.getElementById(`retro-${i}`);
+        if(existingRetro) existingRetro.remove();
+        let retroDiv = document.createElement('div');
+        retroDiv.id = `retro-${i}`;
+        retroDiv.className = userAnswers[i] === q.respuesta ? 'feedback correct' : 'feedback incorrect';
+        retroDiv.style.display = 'block';
+        retroDiv.innerHTML = userAnswers[i] === q.respuesta ? `<strong>✓ CORRECTO:</strong> ${q.retro}` : `<strong>✗ INCORRECTO:</strong> ${q.retro}`;
+        qDiv.appendChild(retroDiv);
+    });
+    
+    let score = (correctCount / quizDB.length) * 10;
+    if(score > userData.bestScore) userData.bestScore = score;
+    
+    document.getElementById('final-score').innerText = `${score.toFixed(1)} / 10`;
+    document.getElementById('attempt-info').innerText = `Intento ${userData.attempts} | Mejor calificación: ${userData.bestScore.toFixed(1)}`;
+    
+    renderDimensions(dimensions);
+    
+    userData.endTime = new Date();
+    clearInterval(timerInterval);
+    
+    sendToAppsScript(score);
+    goToScreen(8);
+}
+
+function renderDimensions(dim) {
+    let container = document.getElementById('dimensions-results');
+    container.innerHTML = '<h3>Desempeño por área</h3>';
+    
+    for (let key in dim) {
+        if(dim[key].t > 0) {
+            let pct = (dim[key].c / dim[key].t) * 100;
+            container.innerHTML += `
+            <div style="margin-bottom: 10px;">
+                <strong>${key.toUpperCase()}</strong>: ${pct.toFixed(0)}%
+                <div style="background: #ccc; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;">
+                    <div style="background: var(--primary); height: 100%; width: ${pct}%;"></div>
+                </div>
+            </div>`;
+        }
+    }
+}
+
+function resetQuiz() {
+    renderQuiz();
+    goToScreen(7);
+}
+
+// SIMULATE SEND DATA
+function sendToAppsScript(score) {
+    let payload = {
+        nombre: userData.nombre,
+        grupo: userData.grupo,
+        cuenta: userData.id,
+        fecha: new Date().toLocaleDateString(),
+        inicio: userData.startTime.toLocaleTimeString(),
+        fin: userData.endTime.toLocaleTimeString(),
+        calificacion: score.toFixed(1),
+        intentos: userData.attempts,
+        pistas: userData.hintsUsed
+    };
+    
+    console.log("Datos listos para enviar a Google Apps Script:", payload);
+    // Código para el profesor (Fetch a Google Apps Script):
+    /*
+    fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(res => console.log('Enviado')).catch(err => console.error(err));
+    */
+}
+
+// INIT
+window.onload = () => {
+    renderQuiz();
+};
+
+</script>
+</body>
+</html>
